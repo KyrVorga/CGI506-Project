@@ -1,2 +1,2 @@
-# CGI605-Project
+# CGI506-Project
 A set of tools for blender
