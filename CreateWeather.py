@@ -20,9 +20,10 @@ class CreateWeather(bpy.types.Operator):
     bl_idname = "object.create_weather"
     bl_label = "Create Weather"
     bl_description = "Creates a procedural weather simulation"
+    bl_options = {'REGISTER', 'UNDO'}
 
     @staticmethod
-    def execute(context):
+    def execute(self, context):
 
         # Create a new plane for the surface
         bpy.ops.mesh.primitive_plane_add(
@@ -149,19 +150,8 @@ def configure_dynamic_paint(emitter_obj, particle_system):
     dynamic_paint_modifier.type_toggle(type='BRUSH')
 
 
-# def createWeather():
-#     # Create a new plane for the emitter
-#     bpy.ops.mesh.primitive_plane_add(size=2, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
-#     emitter_obj = bpy.context.active_object
-#     emitter_obj.name = "Rain Emitter"
-#
-#     # Add particle system to emitter object and configure it
-#     particle_system = add_particle_system(emitter_obj)
-#     configure_dynamic_paint(emitter_obj, particle_system)
-
-
 def draw_menu(self, context):
-    self.layout.operator(CreateWeather.bl_idname)
+    self.layout.operator(CreateWeather.bl_idname, icon="MOD_FLUIDSIM")
 
 
 def register():
