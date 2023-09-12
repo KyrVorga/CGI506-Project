@@ -1,3 +1,7 @@
+"""
+A Blender addon to create dynamic weather effects and procedural clouds.
+"""
+
 import bpy
 
 bl_info = {
@@ -6,7 +10,7 @@ bl_info = {
     "category": "Object",
     "author": "Rhylei Tremlett",
     "description": "A small system to generate procedural weather.",
-    "version": (0, 0, 1),
+    "version": (0, 0, 3),
     "location": "View3D > Add",  # "View3D > Add > Mesh",
     "doc_url": "https://github.com/KyrVorga/CGI605-Project",
     "tracker_url": "https://github.com/KyrVorga/CGI605-Project/issues",
@@ -24,7 +28,6 @@ class CreateWeather(bpy.types.Operator):
 
     @staticmethod
     def execute(self, context):
-
         # Create a new plane for the surface
         bpy.ops.mesh.primitive_plane_add(
             size=2, enter_editmode=False, align='WORLD', location=(0, 0, -1), scale=(1, 1, 1))

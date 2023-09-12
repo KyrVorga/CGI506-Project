@@ -1,3 +1,7 @@
+"""
+A Blender addon that creates versioned backups of your .blend file.
+"""
+
 import bpy
 import shutil
 import datetime
@@ -9,7 +13,7 @@ bl_info = {
     "category": "Object",
     "author": "Rhylei Tremlett",
     "description": "Creates a copy of your .blend file, timestamps it and moves it into /backups.",
-    "version": (0, 0, 1),
+    "version": (0, 0, 2),
     "location": "File > External",
     "doc_url": "https://github.com/KyrVorga/CGI605-Project",
     "tracker_url": "https://github.com/KyrVorga/CGI605-Project/issues",
