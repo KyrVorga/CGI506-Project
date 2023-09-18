@@ -34,11 +34,8 @@ class Backup(bpy.types.Operator):
         # Make sure the project has been named and saved at least once.
         if bpy.data.is_saved:
             # Pack all external data into the .blend
-            bpy.ops.file.pack_all()
+            # bpy.ops.file.pack_all()
             bpy.ops.wm.save_mainfile()
-
-            # Get the path to the blend file (inclusive).
-            path_to_blend = bpy.data.filepath
 
             # Get the current date and format it into a folder compatible string.
             current_date = datetime.datetime.now()

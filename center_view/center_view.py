@@ -9,7 +9,7 @@ bl_info = {
     "blender": (2, 80, 0),  # Minimum Blender version required
     "category": "3D View",
     "author": "Rhylei Tremlett",
-    "description": "Centers the 3D View to Selected",
+    "description": "Centers the viewport on the active object and resets zoom.",
     "version": (0, 0, 1),
     "location": "View3D > Add",
     "doc_url": "https://github.com/KyrVorga/CGI605-Project",
@@ -23,7 +23,7 @@ bl_info = {
 class CenterView(bpy.types.Operator):
     bl_idname = "view3d.view_center_selected"
     bl_label = "Center View to Selected"
-    bl_description = "Creates a copy of your .blend file, timestamps it and moves it into /backups."
+    bl_description = "Centers the viewport on the active object and resets zoom."
     bl_options = {'REGISTER', 'UNDO'}
 
     @staticmethod
