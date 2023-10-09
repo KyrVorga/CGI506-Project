@@ -29,6 +29,8 @@ class Backup(bpy.types.Operator):
     bl_description = "Creates a copy of your .blend file, timestamps it and moves it into /backups."
     bl_options = {'REGISTER', 'UNDO'}
 
+    filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+
     @staticmethod
     def execute(self, context):
         # Make sure the project has been named and saved at least once.
@@ -48,10 +50,8 @@ class Backup(bpy.types.Operator):
             copied_file_path = "{0}/{1}.blend".format(current_directory, output_filename)
 
             # Create the backup folder if it doesn't already exist.
-            backup_folder_path = "{0}/backup".format(current_directory)
-
-            if not os.path.exists(backup_folder_path):
-                os.makedirs(backup_folder_path)
+            # backup_folder_path = "{0}/backup".format(current_directory)
+            backup_folder_path = self.filepath
 
             # Use blender to save the .blend as a copy
             bpy.ops.wm.save_as_mainfile(filepath=copied_file_path, copy=True)
@@ -60,6 +60,14 @@ class Backup(bpy.types.Operator):
             shutil.move(src=copied_file_path, dst=backup_folder_path)
 
         return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.object is not None
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
 
 def draw_menu(self, context):
