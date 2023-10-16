@@ -39,19 +39,24 @@ class Backup(bpy.types.Operator):
             # bpy.ops.file.pack_all()
             bpy.ops.wm.save_mainfile()
 
+            # Get the current blend file name.
+            blend_file_name = bpy.path.basename(
+                bpy.context.blend_data.filepath)
+
             # Get the current date and format it into a folder compatible string.
             current_date = datetime.datetime.now()
-            output_filename = current_date.strftime('%y_%m_%d-%H_%M_%S')
+            output_filename = blend_file_name.replace(
+                ".blend", "") + "_" + current_date.strftime("%Y-%m-%d_%H-%M-%S") + ".blend"
 
             # Get the current directory.
             current_directory = bpy.path.abspath("//")
 
             # Create the expected output path for the new blend file.
-            copied_file_path = "{0}/{1}.blend".format(current_directory, output_filename)
+            copied_file_path = "{0}/{1}".format(
+                current_directory, output_filename)
 
-            # Create the backup folder if it doesn't already exist.
-            # backup_folder_path = "{0}/backup".format(current_directory)
-            backup_folder_path = self.filepath
+            # Remove the user made filename from the path.
+            backup_folder_path = os.path.dirname(self.filepath)
 
             # Use blender to save the .blend as a copy
             bpy.ops.wm.save_as_mainfile(filepath=copied_file_path, copy=True)

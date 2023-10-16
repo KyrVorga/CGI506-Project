@@ -14,13 +14,17 @@
 #     bpy.context.screen.layout_library = minimal_layout
 
 import bpy
+import os
+import shutil
+import atexit
 from bpy.app.handlers import persistent
 
 
 @persistent
 def add_sphere(dummy):
-    for i in range(3):
-        bpy.ops.mesh.primitive_uv_sphere_add(radius=1, location=((i - 1) * 3, 0, 3))
+    for i in range(2):
+        bpy.ops.mesh.primitive_uv_sphere_add(
+            radius=1, location=((i - 1) * 3, 0, 3))
 
 
 @persistent
@@ -54,17 +58,57 @@ def run_when_new_blend_file_open(dummy):
         if "Minimal" not in bpy.data.workspaces:
             bpy.ops.workspace.duplicate({"workspace": default})
             bpy.data.workspaces["Layout.001"].name = "Minimal"
+
             # May be already done, but explicitly make this workspace the active one
             bpy.context.window.workspace = bpy.data.workspaces["Minimal"]
             # bpy.ops.screen.toggle_header_menus()
+
+            # for area in bpy.context.screen.areas:
+            #     if area.type == 'HEADER':
+            #         if area.header_text_set == 'Layout':
+            #             continue
+            #         bpy.ops.screen.header_flip()
+            #         bpy.ops.screen.header_flip()
+            #         bpy.ops.screen.header_close()
+
+            # # Remove all windows except for the main editor area
+            # for window in bpy.context.window_manager.windows:
+            #     if window.screen.name != 'Layout':
+            #         bpy.context.window_manager.windows.remove(window)
+
+            # minimal_layout = bpy.data.libraries.new(
+            #     name="Minimal", internal=False)
+
+            # # Link the layout to the startup file
+            # bpy.context.screen.layout_library = minimal_layout
 
     except:
         print("An exception occurred.")
 
 
+def clear_blender_cache():
+    """
+    Locates the Blender temp/cache files and clears them.
+    """
+    # Get the path to the Blender temp/cache directory
+    cache_dir = os.path.join(os.path.expanduser(
+        "~"), ".config", "blender", "cache")
+
+    # Check if the directory exists
+    if os.path.exists(cache_dir):
+        # Clear the directory
+        shutil.rmtree(cache_dir)
+        os.makedirs(cache_dir)
+        print("Blender cache cleared successfully.")
+    else:
+        print("Blender cache directory not found.")
+
+
 def register():
     bpy.app.handlers.load_post.append(add_sphere)
     bpy.app.handlers.load_post.append(run_when_new_blend_file_open)
+
+    atexit.register(bpy.app.handlers.load_post.remove, clear_blender_cache)
 
 
 def unregister():
