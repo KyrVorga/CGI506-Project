@@ -51,7 +51,7 @@ class ApplyRain(bpy.types.Operator):
             bpy.ops.object.modifier_add(type='DECIMATE')
             bpy.context.object.modifiers["Decimate"].ratio = 0.25
             bpy.ops.object.shade_smooth()
-            raindrop_obj.hide_viewport = True
+            # raindrop_obj.hide_viewport = True
 
         # Create glass material for Rain Drops.
         mat = bpy.data.materials.get("Rain")

@@ -22,7 +22,7 @@ from bpy.app.handlers import persistent
 
 @persistent
 def add_sphere(dummy):
-    for i in range(2):
+    for i in range(4):
         bpy.ops.mesh.primitive_uv_sphere_add(
             radius=1, location=((i - 1) * 3, 0, 3))
 
@@ -43,15 +43,6 @@ def run_when_new_blend_file_open(dummy):
     Scripting: For interacting with Blender’s Python API and writing scripts.
     """
     try:
-        # print(" to 'Scripting' workspaces ")
-        #
-        # bpy.ops.workspace.append_activate(
-        #     idname='Layout',
-        #     filepath=bpy.utils.user_resource('CONFIG', path='startup.blend')
-        # )
-        #
-        # bpy.context.window.workspace = bpy.data.workspaces['Minimal']
-
         # get the default workspace
         default = bpy.data.workspaces.get("Layout")
 
@@ -59,28 +50,15 @@ def run_when_new_blend_file_open(dummy):
             bpy.ops.workspace.duplicate({"workspace": default})
             bpy.data.workspaces["Layout.001"].name = "Minimal"
 
-            # May be already done, but explicitly make this workspace the active one
-            bpy.context.window.workspace = bpy.data.workspaces["Minimal"]
-            # bpy.ops.screen.toggle_header_menus()
+        # May be already done, but explicitly make this workspace the active one
+        bpy.context.window.workspace = bpy.data.workspaces["Minimal"]
 
-            # for area in bpy.context.screen.areas:
-            #     if area.type == 'HEADER':
-            #         if area.header_text_set == 'Layout':
-            #             continue
-            #         bpy.ops.screen.header_flip()
-            #         bpy.ops.screen.header_flip()
-            #         bpy.ops.screen.header_close()
-
-            # # Remove all windows except for the main editor area
-            # for window in bpy.context.window_manager.windows:
-            #     if window.screen.name != 'Layout':
-            #         bpy.context.window_manager.windows.remove(window)
-
-            # minimal_layout = bpy.data.libraries.new(
-            #     name="Minimal", internal=False)
-
-            # # Link the layout to the startup file
-            # bpy.context.screen.layout_library = minimal_layout
+        # Find the 3D viewport screen area.
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                # area.screen_full_area()
+                area.show_fullscreen = True
+                break
 
     except:
         print("An exception occurred.")
