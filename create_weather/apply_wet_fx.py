@@ -10,7 +10,7 @@ bl_info = {
     "category": "Object",
     "author": "Rhylei Tremlett",
     "description": "Applies dynamic canvas to meshes to interact with rain and create wet effects.",
-    "version": (0, 0, 3),
+    "version": (0, 0, 18),
     "location": "View3D > Add",  # "View3D > Add > Mesh",
     "doc_url": "https://github.com/KyrVorga/CGI605-Project",
     "tracker_url": "https://github.com/KyrVorga/CGI605-Project/issues",
@@ -18,6 +18,22 @@ bl_info = {
     "wiki_url": "https://github.com/KyrVorga/CGI605-Project/wiki",
     "warning": "This addon is still under development.",
 }
+
+# Program Logic:
+# check if any objects are selected
+# for each selected object check that it is a mesh
+# check for exising material, if none, create one.
+# check for existing dynamic canvas
+# create a dynamic canvas for each selected object or add to existing canvas
+# create a wetmap for each selected object
+# if it has a material, duplicate it and begin modifying the material
+# if it does not have a material, create a material and modify it
+
+# Part two:
+# in the material, check if there are components connected to base color, specular, roughness and normals
+# create an attribute node and set it to the wetmap
+# create 4 mix shaders and one invert node
+# connect them all up, and if there are existing textures, intercept them with the mix shaders.
 
 
 class ApplyWetFX(bpy.types.Operator):
@@ -34,20 +50,208 @@ class ApplyWetFX(bpy.types.Operator):
 
         # Add a Dynamic Canvas to every selected mesh object.
         for obj in selected_objects:
+            # ---------------------------------------------------------------------------- #
+            #                           #SECTION - Object Setup                            #
+            # ---------------------------------------------------------------------------- #
+
             # Set the active object to the current object.
             bpy.context.view_layer.objects.active = obj
 
-            # apply dynamic brush canvas to water surface
-            bpy.ops.object.modifier_add(type='DYNAMIC_PAINT')
-            obj.modifiers["Dynamic Paint"].ui_type = 'CANVAS'
-            bpy.ops.dpaint.type_toggle(type='CANVAS')
-            obj.modifiers["Dynamic Paint"].canvas_settings.canvas_surfaces["Surface"].surface_type = 'WAVE'
-            obj.modifiers["Dynamic Paint"].canvas_settings.canvas_surfaces["Surface"].brush_radius_scale = 0.35
-            obj.modifiers["Dynamic Paint"].canvas_settings.canvas_surfaces["Surface"].brush_influence_scale = 0.5
-            obj.modifiers["Dynamic Paint"].canvas_settings.canvas_surfaces["Surface"].wave_timescale = 3
-            obj.modifiers["Dynamic Paint"].canvas_settings.canvas_surfaces["Surface"].wave_speed = 0.67
-            obj.modifiers["Dynamic Paint"].canvas_settings.canvas_surfaces[
-                "Surface"].brush_influence_scale = 0.25089
+            # ---------------------------- #SECTION - Material ---------------------------- #
+            # Check for existing material, if none, create one.
+            if obj.active_material is None:
+                # Create material.
+                mat = bpy.data.materials.new(name="Wet")
+                obj.active_material = mat
+
+            # If there is an existing material, duplicate it.
+            else:
+                mat = obj.active_material.copy()
+                obj.active_material = mat
+
+            #!SECTION
+
+            # ---------------------------- #SECTION - Dynamic Canvas ---------------------------- #
+            # Check for existing dynamic canvas.
+            if obj.modifiers.get("Dynamic Paint") is not None:
+                # Check if there is a canvas surface with name "Wet Layer"
+                if obj.modifiers["Dynamic Paint"].canvas_settings.canvas_surfaces.get("Wet Layer") is None:
+                    # If it doesn't exist, add a new canvas surface.
+                    bpy.ops.dpaint.surface_slot_add()
+
+                else:
+                    # If it exists, return finished.
+                    return {'FINISHED'}
+
+            else:
+                # Apply dynamic canvas.
+                bpy.ops.object.modifier_add(type='DYNAMIC_PAINT')
+                bpy.context.object.modifiers["Dynamic Paint"].ui_type = 'CANVAS'
+                bpy.ops.dpaint.type_toggle(type='CANVAS')
+
+            # Most recent canvas surface is the one we want to modify.
+            bpy.context.object.modifiers["Dynamic Paint"].canvas_settings.canvas_surfaces[-1].name = "Wet Layer"
+            wet_layer = bpy.context.object.modifiers["Dynamic Paint"].canvas_settings.canvas_surfaces["Wet Layer"]
+            wet_layer.surface_type = 'PAINT'
+
+            wet_layer.brush_radius_scale = 0.7
+            wet_layer.brush_influence_scale = 0.9
+
+            wet_layer.use_drying = False
+
+            wet_layer.use_spread = True
+            wet_layer.spread_speed = 0.1
+
+            bpy.ops.dpaint.output_toggle(output='B')
+
+            #!SECTION
+
+            # ---------------------------- #SECTION - Collision ---------------------------- #
+
+            # Add a collision modifier and set it to kill particles
+            bpy.ops.object.modifier_add(type='COLLISION')
+            obj.collision.use_particle_kill = True
+
+            #!SECTION
+            #!SECTION
+
+            # ---------------------------------------------------------------------------- #
+            #                          #SECTION - Material Nodes                           #
+            # ---------------------------------------------------------------------------- #
+            # Start setting up the node network.
+            bpy.context.object.active_material.use_nodes = True
+
+            # Create an atrribute node and set it to the wetmap
+            wetmap_node = mat.node_tree.nodes.new(type="ShaderNodeAttribute")
+            wetmap_node.attribute_name = "dp_wetmap"
+            wetmap_node.location = (-1600, 0)
+
+            # --------------------------- #SECTION - Base Color --------------------------- #
+
+            # Create a color mix node
+            base_color_mix_node = mat.node_tree.nodes.new(
+                type="ShaderNodeMixRGB")
+            base_color_mix_node.blend_type = 'DARKEN'
+
+            # Add the attribute node to the mix node factor
+            mat.node_tree.links.new(
+                base_color_mix_node.inputs[0], wetmap_node.outputs[0])
+
+            # Set the secondary mix colour to black
+            base_color_mix_node.inputs[2].default_value = (0, 0, 0.02, 1)
+
+            # Check if there is anything connected to the base color
+            if mat.node_tree.nodes.get("Principled BSDF").inputs[0].links:
+                # If there is, connect it to the mix node
+                mat.node_tree.links.new(
+                    base_color_mix_node.inputs[1], mat.node_tree.nodes.get("Principled BSDF").inputs[0].links[0].from_socket)
+
+                # Disconnect the existing link
+                mat.node_tree.links.remove(
+                    mat.node_tree.nodes.get("Principled BSDF").inputs[0].links[0])
+
+            # Link the mix node output to the base color input
+            mat.node_tree.links.new(
+                mat.node_tree.nodes.get("Principled BSDF").inputs[0], base_color_mix_node.outputs[0])
+
+            base_color_mix_node.location = (-1200, 0)
+
+            #!SECTION
+
+            # --------------------------- #SECTION - Specular --------------------------- #
+
+            # Create a color mix node
+            specular_mix_node = mat.node_tree.nodes.new(
+                type="ShaderNodeMixRGB")
+            specular_mix_node.blend_type = 'MIX'
+
+            # run the attribute node through the primary input
+            mat.node_tree.links.new(
+                specular_mix_node.inputs[1], wetmap_node.outputs[0])
+
+            # Set the secondary mix colour to white
+            specular_mix_node.inputs[2].default_value = (1, 1, 1, 1)
+
+            # Set the factor to 0.5
+            specular_mix_node.inputs[0].default_value = 0.5
+
+            # Check if there is anything connected to the specular
+            if mat.node_tree.nodes.get("Principled BSDF").inputs[7].links:
+                # If there is, connect it to the mix node
+                mat.node_tree.links.new(
+                    specular_mix_node.inputs[0], mat.node_tree.nodes.get("Principled BSDF").inputs[7].links[0].from_socket)
+
+                # Disconnect the existing link
+                mat.node_tree.links.remove(
+                    mat.node_tree.nodes.get("Principled BSDF").inputs[7].links[0])
+
+            # Link the mix node output to the specular input
+            mat.node_tree.links.new(
+                mat.node_tree.nodes.get("Principled BSDF").inputs[7], specular_mix_node.outputs[0])
+
+            #!SECTION
+
+            # --------------------------- #SECTION - Roughness --------------------------- #
+
+            # Create a color mix node
+            roughness_mix_node = mat.node_tree.nodes.new(
+                type="ShaderNodeMixRGB")
+            roughness_mix_node.blend_type = 'MIX'
+
+            # Set the secondary mix colour to grey, value 0.3
+            roughness_mix_node.inputs[2].default_value = (0.3, 0.3, 0.3, 1)
+
+            # run the attribute node through the factor
+            mat.node_tree.links.new(
+                roughness_mix_node.inputs[0], wetmap_node.outputs[0])
+
+            # Check if there is anything connected to the roughness
+            if mat.node_tree.nodes.get("Principled BSDF").inputs[9].links:
+                # If there is, connect it to the mix node
+                mat.node_tree.links.new(
+                    roughness_mix_node.inputs[1], mat.node_tree.nodes.get("Principled BSDF").inputs[9].links[0].from_socket)
+
+                # Disconnect the existing link
+                mat.node_tree.links.remove(
+                    mat.node_tree.nodes.get("Principled BSDF").inputs[9].links[0])
+
+            # Link the mix node output to the roughness input
+            mat.node_tree.links.new(
+                mat.node_tree.nodes.get("Principled BSDF").inputs[9], roughness_mix_node.outputs[0])
+
+            #!SECTION
+
+            # --------------------------- #SECTION - Normals --------------------------- #
+
+            # Create a color mix node
+            normal_mix_node = mat.node_tree.nodes.new(
+                type="ShaderNodeMixRGB")
+            normal_mix_node.blend_type = 'MIX'
+
+            # run the attribute node through the factor
+            mat.node_tree.links.new(
+                normal_mix_node.inputs[0], wetmap_node.outputs[0])
+
+            # Set the secondary mix colour to grey, value 0.075
+            normal_mix_node.inputs[2].default_value = (0.075, 0.075, 0.075, 1)
+
+            # Check if there is anything connected to the normals
+            if mat.node_tree.nodes.get("Principled BSDF").inputs[22].links:
+                # If there is, connect it to the mix node
+                mat.node_tree.links.new(
+                    normal_mix_node.inputs[1], mat.node_tree.nodes.get("Principled BSDF").inputs[22].links[0].from_socket)
+
+                # Disconnect the existing link
+                mat.node_tree.links.remove(
+                    mat.node_tree.nodes.get("Principled BSDF").inputs[22].links[0])
+
+            # Link the mix node output to the normals input
+            mat.node_tree.links.new(
+                mat.node_tree.nodes.get("Principled BSDF").inputs[22], normal_mix_node.outputs[0])
+
+            #!SECTION
+
+            #!SECTION
 
         return {'FINISHED'}
 
