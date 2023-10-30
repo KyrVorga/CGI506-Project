@@ -10,7 +10,7 @@ bl_info = {
     "category": "Object",
     "author": "Rhylei Tremlett",
     "description": "Applies dynamic canvas to meshes to interact with rain and create wet effects.",
-    "version": (0, 0, 18),
+    "version": (0, 0, 20),
     "location": "View3D > Add",  # "View3D > Add > Mesh",
     "doc_url": "https://github.com/KyrVorga/CGI605-Project",
     "tracker_url": "https://github.com/KyrVorga/CGI605-Project/issues",
@@ -121,9 +121,16 @@ class ApplyWetFX(bpy.types.Operator):
             # Start setting up the node network.
             bpy.context.object.active_material.use_nodes = True
 
+            # Create a wet_fx frame
+            wet_fx_frame = mat.node_tree.nodes.new(type="NodeFrame")
+
             # Create an atrribute node and set it to the wetmap
             wetmap_node = mat.node_tree.nodes.new(type="ShaderNodeAttribute")
             wetmap_node.attribute_name = "dp_wetmap"
+
+            # Move the node into the frame
+            wetmap_node.parent = wet_fx_frame
+
             wetmap_node.location = (-1600, 0)
 
             # --------------------------- #SECTION - Base Color --------------------------- #
@@ -153,6 +160,9 @@ class ApplyWetFX(bpy.types.Operator):
             # Link the mix node output to the base color input
             mat.node_tree.links.new(
                 mat.node_tree.nodes.get("Principled BSDF").inputs[0], base_color_mix_node.outputs[0])
+
+            # Move the node into the frame
+            base_color_mix_node.parent = wet_fx_frame
 
             base_color_mix_node.location = (-1200, 0)
 
@@ -189,6 +199,11 @@ class ApplyWetFX(bpy.types.Operator):
             mat.node_tree.links.new(
                 mat.node_tree.nodes.get("Principled BSDF").inputs[7], specular_mix_node.outputs[0])
 
+            # Move the node into the frame
+            specular_mix_node.parent = wet_fx_frame
+
+            specular_mix_node.location = (-1200, -200)
+
             #!SECTION
 
             # --------------------------- #SECTION - Roughness --------------------------- #
@@ -198,8 +213,8 @@ class ApplyWetFX(bpy.types.Operator):
                 type="ShaderNodeMixRGB")
             roughness_mix_node.blend_type = 'MIX'
 
-            # Set the secondary mix colour to grey, value 0.3
-            roughness_mix_node.inputs[2].default_value = (0.3, 0.3, 0.3, 1)
+            # Set the secondary mix colour to grey, value 0.2
+            roughness_mix_node.inputs[2].default_value = (0.2, 0.2, 0.2, 1)
 
             # run the attribute node through the factor
             mat.node_tree.links.new(
@@ -219,6 +234,11 @@ class ApplyWetFX(bpy.types.Operator):
             mat.node_tree.links.new(
                 mat.node_tree.nodes.get("Principled BSDF").inputs[9], roughness_mix_node.outputs[0])
 
+            # Move the node into the frame
+            roughness_mix_node.parent = wet_fx_frame
+
+            roughness_mix_node.location = (-1200, -400)
+
             #!SECTION
 
             # --------------------------- #SECTION - Normals --------------------------- #
@@ -232,8 +252,8 @@ class ApplyWetFX(bpy.types.Operator):
             mat.node_tree.links.new(
                 normal_mix_node.inputs[0], wetmap_node.outputs[0])
 
-            # Set the secondary mix colour to grey, value 0.075
-            normal_mix_node.inputs[2].default_value = (0.075, 0.075, 0.075, 1)
+            # Set the secondary mix colour to grey, value 0.25
+            normal_mix_node.inputs[2].default_value = (0.25, 0.25, 0.25, 1)
 
             # Check if there is anything connected to the normals
             if mat.node_tree.nodes.get("Principled BSDF").inputs[22].links:
@@ -248,6 +268,11 @@ class ApplyWetFX(bpy.types.Operator):
             # Link the mix node output to the normals input
             mat.node_tree.links.new(
                 mat.node_tree.nodes.get("Principled BSDF").inputs[22], normal_mix_node.outputs[0])
+
+            # Move the node into the frame
+            normal_mix_node.parent = wet_fx_frame
+
+            normal_mix_node.location = (-1200, -600)
 
             #!SECTION
 
