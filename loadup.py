@@ -21,13 +21,6 @@ from bpy.app.handlers import persistent
 
 
 @persistent
-def add_sphere(dummy):
-    for i in range(4):
-        bpy.ops.mesh.primitive_uv_sphere_add(
-            radius=1, location=((i - 1) * 3, 0, 3))
-
-
-@persistent
 def run_when_new_blend_file_open(dummy):
     """
     Workspaces
@@ -83,7 +76,6 @@ def clear_blender_cache():
 
 
 def register():
-    bpy.app.handlers.load_post.append(add_sphere)
     bpy.app.handlers.load_post.append(run_when_new_blend_file_open)
 
     atexit.register(bpy.app.handlers.load_post.remove, clear_blender_cache)

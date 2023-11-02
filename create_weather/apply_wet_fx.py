@@ -1,5 +1,5 @@
 """
-A Blender addon to apply dynamic canvas to meshes to interact with rain and create wet effects.
+A Blender addon set up meshes to interact with rain and create wet effects.
 """
 
 import bpy
@@ -9,7 +9,7 @@ bl_info = {
     "blender": (2, 80, 0),  # Minimum Blender version required
     "category": "Object",
     "author": "Rhylei Tremlett",
-    "description": "Applies dynamic canvas to meshes to interact with rain and create wet effects.",
+    "description": "Sets up meshes to interact with rain and create wet effects.",
     "version": (0, 0, 20),
     "location": "View3D > Add",  # "View3D > Add > Mesh",
     "doc_url": "https://github.com/KyrVorga/CGI605-Project",
@@ -39,20 +39,25 @@ bl_info = {
 class ApplyWetFX(bpy.types.Operator):
     bl_idname = "object.apply_wet_fx"
     bl_label = "Apply Wet FX"
-    bl_description = "Creates a dynamic canvas to produces wet effects."
+    bl_description = "Sets up meshes to interact with rain and create wet effects."
     bl_options = {'REGISTER', 'UNDO'}
+
+    # The origin
+    original_materials = {}
 
     @staticmethod
     def execute(self, context):
+        """The main execute function of the operator."""
+
+        # ---------------------------------------------------------------------------- #
+        #                           #SECTION - Object Setup                            #
+        # ---------------------------------------------------------------------------- #
         # Get all selected mesh objects from the outliner.
         selected_objects = [
             obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
 
         # Add a Dynamic Canvas to every selected mesh object.
         for obj in selected_objects:
-            # ---------------------------------------------------------------------------- #
-            #                           #SECTION - Object Setup                            #
-            # ---------------------------------------------------------------------------- #
 
             # Set the active object to the current object.
             bpy.context.view_layer.objects.active = obj
@@ -66,6 +71,8 @@ class ApplyWetFX(bpy.types.Operator):
 
             # If there is an existing material, duplicate it.
             else:
+                self.original_materials[obj.name] = obj.active_material
+
                 mat = obj.active_material.copy()
                 obj.active_material = mat
 
@@ -281,17 +288,90 @@ class ApplyWetFX(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class RevertWetFX(bpy.types.Operator):
+    bl_idname = "object.revert_wet_fx"
+    bl_label = "Revert Wet FX"
+    bl_description = "Reverts the effects of the Apply Wet FX operator."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        """The main execute function of the operator."""
+        # Get all selected mesh objects from the outliner.
+        selected_objects = [
+            obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
+
+        # For each object in the selection, revert the effects of the operator
+        for obj in selected_objects:
+            # ------------------------- #SECTION - Revert material ------------------------ #
+
+            # If the mesh has a material
+            if obj.active_material is not None:
+                # Delete the wet material
+                bpy.data.materials.remove(obj.active_material)
+
+                # If the original material exists
+                if obj.name in ApplyWetFX.original_materials:
+
+                    # Restore the original material
+                    obj.data.materials[0] = ApplyWetFX.original_materials[obj.name]
+
+                    # Remove the original material from the list
+                    ApplyWetFX.original_materials.pop(obj.name)
+
+                    # Set the original material to the active material
+                    obj.active_material = obj.data.materials[0]
+
+            #!SECTION
+
+            # -------------------------- #SECTION - Remove wetmap ------------------------- #
+            # Check if there is a wetmap
+            if obj.data.vertex_colors.get("dp_wetmap") is not None:
+                # If it exists, remove it.
+                bpy.ops.dpaint.output_toggle(output='B')
+
+            #!SECTION
+
+            # ------------------------- #SECTION - Revert canvas ------------------------ #
+            # Check if there is a dynamic canvas
+            if obj.modifiers.get("Dynamic Paint") is not None:
+                # Check if there is a canvas surface with name "Wet Layer"
+                if obj.modifiers["Dynamic Paint"].canvas_settings.canvas_surfaces.get("Wet Layer") is not None:
+                    # If it exists, delete it.
+                    bpy.ops.dpaint.surface_slot_remove()
+
+                # Delete the dynamic canvas
+                bpy.ops.object.modifier_remove(modifier="Dynamic Paint")
+
+            #!SECTION
+
+            # ------------------------ #SECTION - Remove collision ------------------------ #
+            # Check if there is a collision modifier
+            if obj.modifiers.get("Collision") is not None:
+                # If it exists, delete it.
+                bpy.ops.object.modifier_remove(modifier="Collision")
+
+            #!SECTION
+
+        return {'FINISHED'}
+
+
 def draw_menu(self, context):
+    """Draw the menu item in the add menu."""
     self.layout.operator(ApplyWetFX.bl_idname, icon="MOD_FLUIDSIM")
+    self.layout.operator(RevertWetFX.bl_idname, icon="MOD_FLUIDSIM")
 
 
 def register():
+    """Register the operator."""
     bpy.utils.register_class(ApplyWetFX)
+    bpy.utils.register_class(RevertWetFX)
     bpy.types.VIEW3D_MT_add.append(draw_menu)
 
 
 def unregister():
+    """Unregister the operator."""
     bpy.utils.unregister_class(ApplyWetFX)
+    bpy.utils.unregister_class(RevertWetFX)
     bpy.types.VIEW3D_MT_add.remove(draw_menu)
 
 

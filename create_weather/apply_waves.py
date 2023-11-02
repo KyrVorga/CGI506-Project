@@ -52,17 +52,43 @@ class ApplyWaves(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class RevertWaves(bpy.types.Operator):
+    bl_idname = "object.revert_waves"
+    bl_label = "Revert Waves"
+    bl_description = "Reverts the effects of Apply Waves operator on meshes."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @staticmethod
+    def execute(self, context):
+        # Get all selected mesh objects from the outliner.
+        selected_objects = [
+            obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
+
+        # Add a Dynamic Canvas to every selected mesh object.
+        for obj in selected_objects:
+            # Set the active object to the current object.
+            bpy.context.view_layer.objects.active = obj
+
+            # remove dynamic brush canvas from water surface
+            bpy.ops.object.modifier_remove(modifier="Dynamic Paint")
+
+        return {'FINISHED'}
+
+
 def draw_menu(self, context):
     self.layout.operator(ApplyWaves.bl_idname, icon="MOD_FLUIDSIM")
+    self.layout.operator(RevertWaves.bl_idname, icon="MOD_FLUIDSIM")
 
 
 def register():
     bpy.utils.register_class(ApplyWaves)
+    bpy.utils.register_class(RevertWaves)
     bpy.types.VIEW3D_MT_add.append(draw_menu)
 
 
 def unregister():
     bpy.utils.unregister_class(ApplyWaves)
+    bpy.utils.unregister_class(RevertWaves)
     bpy.types.VIEW3D_MT_add.remove(draw_menu)
 
 

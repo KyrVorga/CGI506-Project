@@ -121,6 +121,32 @@ class ApplyRain(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class RevertRain(bpy.types.Operator):
+    bl_idname = "object.revert_rain"
+    bl_label = "Revert Rain"
+    bl_description = "Reverts the effects of Apply Rain operator on meshes."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @staticmethod
+    def execute(self, context):
+        # Get all selected mesh objects from the outliner.
+        selected_objects = [
+            obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
+
+        # Add a Dynamic Canvas to every selected mesh object.
+        for obj in selected_objects:
+            # Set the active object to the current object.
+            bpy.context.view_layer.objects.active = obj
+
+            # Delete the particle system
+            bpy.ops.object.particle_system_remove()
+
+            # Remove dynamic paint from object
+            bpy.ops.object.modifier_remove(modifier="Dynamic Paint")
+
+        return {'FINISHED'}
+
+
 def add_particle_system(emitter_obj):
     # Add a particle system to the emitter object
     bpy.ops.object.particle_system_add()
@@ -132,15 +158,19 @@ def add_particle_system(emitter_obj):
 
 def draw_menu(self, context):
     self.layout.operator(ApplyRain.bl_idname, icon="MOD_FLUIDSIM")
+    self.layout.operator(RevertRain.bl_idname, icon="MOD_FLUIDSIM")
 
 
 def register():
     bpy.utils.register_class(ApplyRain)
+    bpy.utils.register_class(RevertRain)
+
     bpy.types.VIEW3D_MT_add.append(draw_menu)
 
 
 def unregister():
     bpy.utils.unregister_class(ApplyRain)
+    bpy.utils.unregister_class(RevertRain)
     bpy.types.VIEW3D_MT_add.remove(draw_menu)
 
 
