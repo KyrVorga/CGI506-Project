@@ -13,7 +13,7 @@ bl_info = {
     "category": "Object",
     "author": "Rhylei Tremlett",
     "description": "Creates a copy of your .blend file, timestamps it and moves it into /backups.",
-    "version": (0, 0, 2),
+    "version": (0, 0, 3),
     "location": "File > External",
     "doc_url": "https://github.com/KyrVorga/CGI605-Project",
     "tracker_url": "https://github.com/KyrVorga/CGI605-Project/issues",
@@ -33,10 +33,10 @@ class Backup(bpy.types.Operator):
 
     @staticmethod
     def execute(self, context):
+        """Creates a copy of the .blend file, timestamps it and moves it into the selected folder."""
         # Make sure the project has been named and saved at least once.
         if bpy.data.is_saved:
             # Pack all external data into the .blend
-            # bpy.ops.file.pack_all()
             bpy.ops.wm.save_mainfile()
 
             # Get the current blend file name.
@@ -68,23 +68,28 @@ class Backup(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        """Checks if the operator can run."""
         return context.object is not None
 
     def invoke(self, context, event):
+        """Opens the file browser."""
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
 
 def draw_menu(self, context):
+    """Draws the menu item."""
     self.layout.operator(Backup.bl_idname)
 
 
 def register():
+    """Registers the operator."""
     bpy.utils.register_class(Backup)
     bpy.types.TOPBAR_MT_file.append(draw_menu)
 
 
 def unregister():
+    """Unregisters the operator."""
     bpy.utils.unregister_class(Backup)
     bpy.types.TOPBAR_MT_file.remove(draw_menu)
 

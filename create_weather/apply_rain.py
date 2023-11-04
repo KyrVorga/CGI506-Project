@@ -10,7 +10,7 @@ bl_info = {
     "category": "Object",
     "author": "Rhylei Tremlett",
     "description": "Applies a rain emitter to all selected meshes.",
-    "version": (0, 0, 3),
+    "version": (0, 0, 5),
     "location": "View3D > Add",  # "View3D > Add > Mesh",
     "doc_url": "https://github.com/KyrVorga/CGI605-Project",
     "tracker_url": "https://github.com/KyrVorga/CGI605-Project/issues",
@@ -34,6 +34,7 @@ class ApplyRain(bpy.types.Operator):
 
     @staticmethod
     def execute(self, context):
+        """Applies a rain emitter to all selected mesh objects."""
         # Get all selected mesh objects from the outliner.
         selected_objects = [
             obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
@@ -129,6 +130,7 @@ class RevertRain(bpy.types.Operator):
 
     @staticmethod
     def execute(self, context):
+        """Reverts the effects of Apply Rain operator on meshes."""
         # Get all selected mesh objects from the outliner.
         selected_objects = [
             obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
@@ -148,6 +150,7 @@ class RevertRain(bpy.types.Operator):
 
 
 def add_particle_system(emitter_obj):
+    """Adds a particle system to the emitter object and returns it."""
     # Add a particle system to the emitter object
     bpy.ops.object.particle_system_add()
     # Get the last added particle system
@@ -157,11 +160,13 @@ def add_particle_system(emitter_obj):
 
 
 def draw_menu(self, context):
+    """Draws the menu for the Apply Rain operator."""
     self.layout.operator(ApplyRain.bl_idname, icon="MOD_FLUIDSIM")
     self.layout.operator(RevertRain.bl_idname, icon="MOD_FLUIDSIM")
 
 
 def register():
+    """Registers the Apply Rain operator."""
     bpy.utils.register_class(ApplyRain)
     bpy.utils.register_class(RevertRain)
 
@@ -169,6 +174,7 @@ def register():
 
 
 def unregister():
+    """Unregisters the Apply Rain operator."""
     bpy.utils.unregister_class(ApplyRain)
     bpy.utils.unregister_class(RevertRain)
     bpy.types.VIEW3D_MT_add.remove(draw_menu)

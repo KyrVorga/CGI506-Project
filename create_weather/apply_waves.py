@@ -10,7 +10,7 @@ bl_info = {
     "category": "Object",
     "author": "Rhylei Tremlett",
     "description": "Applies dynamic canvas to meshes to interact with rain and create waves/ripples.",
-    "version": (0, 0, 3),
+    "version": (0, 0, 4),
     "location": "View3D > Add",  # "View3D > Add > Mesh",
     "doc_url": "https://github.com/KyrVorga/CGI605-Project",
     "tracker_url": "https://github.com/KyrVorga/CGI605-Project/issues",
@@ -28,6 +28,7 @@ class ApplyWaves(bpy.types.Operator):
 
     @staticmethod
     def execute(self, context):
+        """Applies a wave dynamic canvas to all selected mesh objects."""
         # Get all selected mesh objects from the outliner.
         selected_objects = [
             obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
@@ -37,10 +38,12 @@ class ApplyWaves(bpy.types.Operator):
             # Set the active object to the current object.
             bpy.context.view_layer.objects.active = obj
 
-            # apply dynamic brush canvas to water surface
+            # Apply dynamic brush canvas to water surface
             bpy.ops.object.modifier_add(type='DYNAMIC_PAINT')
             obj.modifiers["Dynamic Paint"].ui_type = 'CANVAS'
             bpy.ops.dpaint.type_toggle(type='CANVAS')
+
+            # Set canvas settings
             obj.modifiers["Dynamic Paint"].canvas_settings.canvas_surfaces["Surface"].surface_type = 'WAVE'
             obj.modifiers["Dynamic Paint"].canvas_settings.canvas_surfaces["Surface"].brush_radius_scale = 0.35
             obj.modifiers["Dynamic Paint"].canvas_settings.canvas_surfaces["Surface"].brush_influence_scale = 0.5
@@ -60,6 +63,7 @@ class RevertWaves(bpy.types.Operator):
 
     @staticmethod
     def execute(self, context):
+        """Removes the wave dynamic canvas on all selected mesh objects."""
         # Get all selected mesh objects from the outliner.
         selected_objects = [
             obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
@@ -76,17 +80,20 @@ class RevertWaves(bpy.types.Operator):
 
 
 def draw_menu(self, context):
+    """Draws the menu for the Apply Waves operator."""
     self.layout.operator(ApplyWaves.bl_idname, icon="MOD_FLUIDSIM")
     self.layout.operator(RevertWaves.bl_idname, icon="MOD_FLUIDSIM")
 
 
 def register():
+    """Registers the Apply Waves operator."""
     bpy.utils.register_class(ApplyWaves)
     bpy.utils.register_class(RevertWaves)
     bpy.types.VIEW3D_MT_add.append(draw_menu)
 
 
 def unregister():
+    """Unregisters the Apply Waves operator."""
     bpy.utils.unregister_class(ApplyWaves)
     bpy.utils.unregister_class(RevertWaves)
     bpy.types.VIEW3D_MT_add.remove(draw_menu)

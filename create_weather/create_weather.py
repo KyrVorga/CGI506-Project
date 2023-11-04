@@ -81,7 +81,8 @@ class CreateWeather(bpy.types.Operator):
         rain_system.settings.size_random = 1
         rain_system.settings.count = 1000
 
-        dynamic_paint_modifier = emitter_obj.modifiers.new(name="Dynamic Paint", type='DYNAMIC_PAINT')
+        dynamic_paint_modifier = emitter_obj.modifiers.new(
+            name="Dynamic Paint", type='DYNAMIC_PAINT')
         dynamic_paint_modifier.ui_type = 'BRUSH'
         bpy.ops.dpaint.type_toggle(type='BRUSH')
 
@@ -140,14 +141,16 @@ class CreateWeather(bpy.types.Operator):
 def add_particle_system(emitter_obj):
     # Add a particle system to the emitter object
     bpy.ops.object.particle_system_add()
-    particle_system = emitter_obj.particle_systems[-1]  # Get the last added particle system
+    # Get the last added particle system
+    particle_system = emitter_obj.particle_systems[-1]
     particle_system.name = "Rain Particle System"
     return particle_system
 
 
 def configure_dynamic_paint(emitter_obj, particle_system):
     # Add Dynamic Paint modifier to the emitter object
-    dynamic_paint_modifier = emitter_obj.modifiers.new(name="Dynamic Paint", type='DYNAMIC_PAINT')
+    dynamic_paint_modifier = emitter_obj.modifiers.new(
+        name="Dynamic Paint", type='DYNAMIC_PAINT')
     dynamic_paint_modifier.ui_type = 'BRUSH'
     dynamic_paint_modifier.brush_settings.particle_system = particle_system
     dynamic_paint_modifier.type_toggle(type='BRUSH')

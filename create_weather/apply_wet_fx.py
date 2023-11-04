@@ -10,7 +10,7 @@ bl_info = {
     "category": "Object",
     "author": "Rhylei Tremlett",
     "description": "Sets up meshes to interact with rain and create wet effects.",
-    "version": (0, 0, 20),
+    "version": (0, 0, 28),
     "location": "View3D > Add",  # "View3D > Add > Mesh",
     "doc_url": "https://github.com/KyrVorga/CGI605-Project",
     "tracker_url": "https://github.com/KyrVorga/CGI605-Project/issues",
@@ -47,7 +47,7 @@ class ApplyWetFX(bpy.types.Operator):
 
     @staticmethod
     def execute(self, context):
-        """The main execute function of the operator."""
+        """Applies a wet FX to all selected mesh objects."""
 
         # ---------------------------------------------------------------------------- #
         #                           #SECTION - Object Setup                            #
@@ -295,7 +295,7 @@ class RevertWetFX(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        """The main execute function of the operator."""
+        """Reverts the effects of the Apply Wet FX operator."""
         # Get all selected mesh objects from the outliner.
         selected_objects = [
             obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
@@ -362,14 +362,14 @@ def draw_menu(self, context):
 
 
 def register():
-    """Register the operator."""
+    """Registers the Apply Wet FX operator."""
     bpy.utils.register_class(ApplyWetFX)
     bpy.utils.register_class(RevertWetFX)
     bpy.types.VIEW3D_MT_add.append(draw_menu)
 
 
 def unregister():
-    """Unregister the operator."""
+    """Unregisters the Apply Wet FX operator."""
     bpy.utils.unregister_class(ApplyWetFX)
     bpy.utils.unregister_class(RevertWetFX)
     bpy.types.VIEW3D_MT_add.remove(draw_menu)
