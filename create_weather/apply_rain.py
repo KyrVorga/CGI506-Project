@@ -105,15 +105,25 @@ class ApplyRain(bpy.types.Operator):
             rain_system.settings.instance_object = bpy.data.objects["Raindrop"]
             rain_system.settings.particle_size = 0.01
             rain_system.settings.size_random = 1
-            rain_system.settings.count = 1000
+            rain_system.settings.count = 10000
             rain_system.settings.emit_from = 'VOLUME'
 
+            # Set the emitter to not be visible in viewport and render
+            obj.show_instancer_for_viewport = False
+            obj.show_instancer_for_render = False
+
+            # Setup the dynamic paint modifier
             dynamic_paint_modifier = obj.modifiers.new(
                 name="Dynamic Paint", type='DYNAMIC_PAINT')
             dynamic_paint_modifier.ui_type = 'BRUSH'
+
+            # Set the brush type to 'PAINT'
             bpy.ops.dpaint.type_toggle(type='BRUSH')
 
+            # Get the active object
             active_obj = bpy.context.active_object
+
+            # Modify the brush settings to use the emitter particle system as the paint source
             obj.modifiers["Dynamic Paint"].brush_settings.paint_source = "PARTICLE_SYSTEM"
             obj.modifiers["Dynamic Paint"].brush_settings.particle_system = \
                 active_obj.particle_systems["Rain Particle System"]

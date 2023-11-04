@@ -159,8 +159,7 @@ class GenerateCloud(bpy.types.Operator):
         # cloud_collection.objects.link(volume_obj)
 
         # Set the cloud mesh to hidden
-        cloud_obj.hide_viewport = True
-        cloud_obj.hide_render = True
+        cloud_obj.hide_view_set()
 
         # Create an empty object to be used as the movement anchor
         bpy.ops.object.empty_add(
