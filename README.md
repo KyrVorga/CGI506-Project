@@ -2,21 +2,22 @@
 
 ## Description
 
-This project is a part of the CGI506 course. It involves creating a Blender add-on for [describe the purpose of the add-on].
+This project is a part of the CGI506 course. It is a collection of Blender add-ons that can be used to create a scene with procedural clouds and rain. The add-ons are written in Python.
 
 ## Installation
 
 1. Download the repository.
 2. Open Blender and go to `Edit > Preferences > Add-ons`.
-3. Click on `Install...` and select the downloaded zip file.
+3. Click on `Install...` and select the add-on file.
 4. Enable the add-on.
-
+5. Repeat for every add-on you which to use.
 
 ## Features
 
-- Feature 1: [describe feature 1]
-- Feature 2: [describe feature 2]
-- ...
+- A new workspace and a center view to object hotkey.
+- Generate procedural clouds that change form as they move.
+- Make a mesh into a rain emitter (pairs well with the clouds).
+- Make any mesh interact with rain, with effects like waves/ripples and wet/dry.
 
 ## Contributing
 

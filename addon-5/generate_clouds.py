@@ -11,7 +11,7 @@ bl_info = {
     "category": "Object",
     "author": "Rhylei Tremlett",
     "description": "Generates procedural clouds.",
-    "version": (0, 0, 1),
+    "version": (0, 0, 6),
     "location": "View3D > Add",  # "View3D > Add > Mesh",
     "doc_url": "https://github.com/KyrVorga/CGI605-Project",
     "tracker_url": "https://github.com/KyrVorga/CGI605-Project/issues",
