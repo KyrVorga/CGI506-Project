@@ -29,17 +29,12 @@ class GenerateCloud(bpy.types.Operator):
 
     @staticmethod
     def execute(self, context):
-        # Addon Logic:
-        # Get the location of the cursor
-        # Add a icospere at the cursor
-        # Create an emtpy object at the world origin
-        # Add a displace modifier to the cloud
-        # Configure the displace modifier to use a cloud texture and set the object to the empty anchor point.
-        # Add a simple deform modifier to the cloud, set it to stretch negativley on the z axis
-        # Add a subsurf modifier to the cloud
-        # Create a new material for the cloud
-        # Create a procedural cloud texture
+        """Generates a procedural cloud."""
 
+        # ------------------- #SECTION - Cloud Anchor ------------------ #
+        # Create an empty object to be used as the cloud anchor
+        # The anchor is used as a reference point for the cloud and its volume
+        # It allows the clouds to change shape as they move
         cloud_anchor = None
 
         # Check if there is already a cloud anchor
@@ -60,6 +55,9 @@ class GenerateCloud(bpy.types.Operator):
         # Get the location of the cursor
         cursor_location = context.scene.cursor.location.copy()
 
+        #!SECTION
+
+        # ------------------- #SECTION - Collection ------------------ #
         # Create a cloud collection with a unique name using a random hex value
         collection_name = "Cloud Collection " + \
             str(hex(random.randint(0, 1000000)))
@@ -70,6 +68,7 @@ class GenerateCloud(bpy.types.Operator):
         bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[
             collection_name]
 
+        # ------------------- #SECTION - Cloud Mesh ------------------ #
         # Add a icospere at the cursor
         bpy.ops.mesh.primitive_ico_sphere_add(
             radius=1, enter_editmode=False, align='WORLD', location=cursor_location, scale=(1, 1, 1))
@@ -87,6 +86,9 @@ class GenerateCloud(bpy.types.Operator):
             random.uniform(4, 6), random.uniform(4, 6), random.uniform(4, 6)
         )
 
+        #!SECTION
+
+        # ------------------- #SECTION - Displace Modifier ------------------ #
         # Add a displace modifier to the cloud
         cloud_obj.modifiers.new(name="Displace", type='DISPLACE')
 
@@ -114,12 +116,18 @@ class GenerateCloud(bpy.types.Operator):
         cloud_obj.modifiers["Displace"].texture_coords = 'OBJECT'
         cloud_obj.modifiers["Displace"].texture_coords_object = cloud_anchor
 
+        #!SECTION
+
+        # ------------------- #SECTION - Subdivision Modifier ------------------ #
         # Add a subsurf modifier to the cloud
         cloud_obj.modifiers.new(name="Subdivision", type='SUBSURF')
         cloud_obj.modifiers["Subdivision"].levels = 2
         cloud_obj.modifiers["Subdivision"].render_levels = 2
         cloud_obj.modifiers["Subdivision"].subdivision_type = 'CATMULL_CLARK'
 
+        #!SECTION
+
+        # ------------------- #SECTION - Deform Modifier ------------------ #
         # Add a simple deform modifier to the cloud, set it to stretch negativley on the z axis
         cloud_obj.modifiers.new(name="Deform", type='SIMPLE_DEFORM')
         cloud_obj.modifiers["Deform"].deform_method = 'STRETCH'
@@ -127,6 +135,9 @@ class GenerateCloud(bpy.types.Operator):
         # Set the factor to random between -0.3 and -0.7
         cloud_obj.modifiers["Deform"].factor = random.uniform(-0.3, -0.7)
 
+        #!SECTION
+
+        # ------------------- #SECTION - Cloud Volume Setup ------------------ #
         # Create an emtpy volume object
         bpy.ops.object.volume_add(
             align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
@@ -152,16 +163,11 @@ class GenerateCloud(bpy.types.Operator):
         # Set the displacement strength to 1
         volume_obj.modifiers["Volume Displace"].strength = 1
 
-        # # Creatre a collection and move both objects inside
-        # cloud_collection = bpy.data.collections.new("Cloud Collection")
-        # bpy.context.scene.collection.children.link(cloud_collection)
-        # cloud_collection.objects.link(cloud_obj)
-        # cloud_collection.objects.link(volume_obj)
+        #!SECTION
 
-        # Set the cloud mesh to hidden
-        cloud_obj.hide_view_set()
-
+        # ------------------- #SECTION - Cloud Movement Anchor ------------------ #
         # Create an empty object to be used as the movement anchor
+        # The movement anchor allows the cloud to move easily
         bpy.ops.object.empty_add(
             type='PLAIN_AXES', align='WORLD', location=cursor_location, scale=(1, 1, 1))
         movement_anchor = bpy.context.active_object
@@ -180,26 +186,28 @@ class GenerateCloud(bpy.types.Operator):
         volume_obj.constraints["Copy Location"].use_y = True
         volume_obj.constraints["Copy Location"].use_z = True
 
-        # Set the movement anchor to hidden in renders
-        movement_anchor.hide_render = True
-
         # Set the original collection to be the active collection
         bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[
             "Collection"]
 
         return {'FINISHED'}
 
+        #!SECTION
+
 
 def draw_menu(self, context):
+    """Draws the menu in the Add > Mesh menu."""
     self.layout.operator(GenerateCloud.bl_idname, icon="MOD_FLUIDSIM")
 
 
 def register():
+    """Registers the addon."""
     bpy.utils.register_class(GenerateCloud)
     bpy.types.VIEW3D_MT_add.append(draw_menu)
 
 
 def unregister():
+    """Unregisters the addon."""
     bpy.utils.unregister_class(GenerateCloud)
     bpy.types.VIEW3D_MT_add.remove(draw_menu)
 

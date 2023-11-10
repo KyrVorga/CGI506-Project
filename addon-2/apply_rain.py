@@ -39,6 +39,7 @@ class ApplyRain(bpy.types.Operator):
         selected_objects = [
             obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
 
+        # ------------------- #SECTION - Raindrop Mesh ------------------ #
         # Check if the raindrop already exists. If not, create it.
         raindrop_obj = bpy.data.objects.get("Raindrop")
         if raindrop_obj is None:
@@ -54,6 +55,9 @@ class ApplyRain(bpy.types.Operator):
             bpy.ops.object.shade_smooth()
             # raindrop_obj.hide_viewport = True
 
+            #!SECTION
+
+        # ------------------- #SECTION - Rain Material------------------ #
         # Create glass material for Rain Drops.
         mat = bpy.data.materials.get("Rain")
         if mat is None:
@@ -82,6 +86,9 @@ class ApplyRain(bpy.types.Operator):
 
             mat.use_screen_refraction = True
 
+            #!SECTION
+
+        # ------------------- #SECTION - Apply Material------------------ #
         # Assign rain material to raindrop object.
         if raindrop_obj.data.materials:
             # Assign to 1st material slot.
@@ -90,6 +97,9 @@ class ApplyRain(bpy.types.Operator):
             # No slots.
             raindrop_obj.data.materials.append(mat)
 
+            #!SECTION
+
+        # ------------------- #SECTION - Particle System ------------------ #
         # Add a rain emmitter to every selected mesh object.
         for obj in selected_objects:
             # Set the active object to the current object.
@@ -112,6 +122,9 @@ class ApplyRain(bpy.types.Operator):
             obj.show_instancer_for_viewport = False
             obj.show_instancer_for_render = False
 
+            #!SECTION
+
+            # ------------------- #SECTION - Dynamic Paint ------------------ #
             # Setup the dynamic paint modifier
             dynamic_paint_modifier = obj.modifiers.new(
                 name="Dynamic Paint", type='DYNAMIC_PAINT')
@@ -128,6 +141,8 @@ class ApplyRain(bpy.types.Operator):
             obj.modifiers["Dynamic Paint"].brush_settings.particle_system = \
                 active_obj.particle_systems["Rain Particle System"]
             obj.modifiers["Dynamic Paint"].brush_settings.solid_radius = 0.05
+
+            #!SECTION
 
         return {'FINISHED'}
 
